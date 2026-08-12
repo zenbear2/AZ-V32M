@@ -1,0 +1,36 @@
+// BPU 2-bit Counter Loop Test Memory Preload
+// Instruction 0: addi x1, x0, 0 (0x00000093) -> loop i = 0
+93
+00
+00
+00
+// Instruction 1: addi x2, x0, 5 (0x00500113) -> loop N = 5
+13
+01
+50
+00
+// Instruction 2: addi x3, x0, 0 (0x00000193) -> sum = 0
+93
+01
+00
+00
+// Instruction 3 (Loop top 0x0c): addi x3, x3, 10 (0x00a18193) -> sum += 10
+93
+81
+a1
+00
+// Instruction 4 (0x10): addi x1, x1, 1 (0x00108093) -> i++
+93
+80
+10
+00
+// Instruction 5 (0x14): blt x1, x2, -8 (0xfe20cce3) -> if i < 5 jump back to 0x0c
+e3
+cc
+20
+fe
+// Instruction 6 (0x18): JAL x0, 0 (0x0000006f) -> Halt loop (j .)
+6f
+00
+00
+00

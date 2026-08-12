@@ -1,0 +1,56 @@
+// RV32I Branch and Jump Test Memory Preload
+// Instruction 0 (0x00): addi x1, x0, 10 (0x00a00093)
+93
+00
+a0
+00
+// Instruction 1 (0x04): addi x2, x0, 20 (0x01400113)
+13
+01
+40
+01
+// Instruction 2 (0x08): bge x1, x2, +12 (0x0020d663) -> Not taken (10 >= 20 is false)
+63
+d6
+20
+00
+// Instruction 3 (0x0c): blt x1, x2, +8 (0x0020c463) -> Taken (10 < 20 is true) -> Jump to 0x14
+63
+c4
+20
+00
+// Instruction 4 (0x10): addi x3, x0, 99 (0x06300193) -> Skipped
+93
+01
+30
+06
+// Instruction 5 (0x14): addi x4, x0, 0x24 (0x02400213) -> x4 = 0x24
+13
+02
+40
+02
+// Instruction 6 (0x18): jalr x6, 0(x4) (0x00020367) -> Jump to 0x24, x6 = 0x1c
+67
+03
+02
+00
+// Instruction 7 (0x1c): addi x5, x0, 99 (0x06300293) -> Skipped by JALR
+93
+02
+30
+06
+// Instruction 8 (0x20): NOP (0x00000013)
+13
+00
+00
+00
+// Instruction 9 (0x24): addi x5, x0, 77 (0x04d00293) -> Target of JALR, x5 = 77
+93
+02
+d0
+04
+// Instruction 10 (0x28): JAL x0, 0 (0x0000006f) -- Halt loop
+6f
+00
+00
+00

@@ -1,0 +1,51 @@
+// RV32I Basic Test Memory Preload
+// Instruction 0: addi x1, x0, 10 (0x00a00093)
+93
+00
+a0
+00
+// Instruction 1: addi x2, x0, 20 (0x01400113)
+13
+01
+40
+01
+// Instruction 2: add x3, x1, x2 (0x002081b3)
+b3
+81
+20
+00
+// Instruction 3: sub x4, x2, x1 (0x40110233)
+33
+02
+11
+40
+// Instruction 4: sw x3, 0(x0) (0x00302023)
+23
+20
+30
+00
+// Instruction 5: lw x5, 0(x0) (0x00002283)
+83
+22
+00
+00
+// Instruction 6: beq x3, x5, +8 (0x00518463)
+63
+84
+51
+00
+// Instruction 7: addi x6, x0, 99 (0x06300313) -- SKIPPED BY BRANCH
+13
+03
+30
+06
+// Instruction 8: addi x6, x0, 42 (0x02a00313) -- BRANCH TARGET
+13
+03
+a0
+02
+// Instruction 9: JAL x0, 0 (0x0000006f) -- Halt loop
+6f
+00
+00
+00

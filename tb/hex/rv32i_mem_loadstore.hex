@@ -1,0 +1,61 @@
+// RV32I Memory Load/Store Byte/Halfword/Word Test Memory Preload
+// Instruction 0: addi x1, x0, 0x100 (0x10000093) -> Base addr = 256
+93
+00
+00
+10
+// Instruction 1: addi x2, x0, 0xab (0x0ab00113) -> x2 = 0xab
+13
+01
+b0
+0a
+// Instruction 2: sb x2, 0(x1) (0x00208023) -> mem[0x100] = 0xab
+23
+80
+20
+00
+// Instruction 3: addi x3, x0, -86 (0xfaa00193) -> x3 = 0xffffffaa
+93
+01
+a0
+fa
+// Instruction 4: sb x3, 1(x1) (0x003080a3) -> mem[0x101] = 0xaa
+a3
+80
+30
+00
+// Instruction 5: lbu x4, 0(x1) (0x0000c203) -> x4 = 0x000000ab
+03
+c2
+00
+00
+// Instruction 6: lb x5, 1(x1) (0x00108283) -> x5 = 0xffffffaa (-86)
+83
+82
+10
+00
+// Instruction 7: addi x6, x0, 0x234 (0x23400313) -> x6 = 0x234
+13
+03
+40
+23
+// Instruction 8: sh x6, 2(x1) (0x00609123) -> mem[0x102..0x103] = 0x0234
+23
+91
+60
+00
+// Instruction 9: lh x7, 2(x1) (0x00209383) -> x7 = 0x00000234
+83
+93
+20
+00
+// Instruction 10: lw x8, 0(x1) (0x0000a403) -> x8 = 0x0234aaab
+03
+a4
+00
+00
+// Instruction 11: JAL x0, 0 (0x0000006f) -- Halt loop
+6f
+00
+00
+00

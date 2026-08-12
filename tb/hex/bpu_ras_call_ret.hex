@@ -1,0 +1,56 @@
+// BPU RAS Call/Return Test Memory Preload
+// Instruction 0 (0x00): jal x1, +16 (0x010000ef) -> Call Func1 (0x10), x1 = 0x04
+ef
+00
+00
+01
+// Instruction 1 (0x04): addi x10, x0, 100 (0x06400513) -> Return point x10 = 100
+13
+05
+40
+06
+// Instruction 2 (0x08): JAL x0, 0 (0x0000006f) -> Halt loop
+6f
+00
+00
+00
+// Instruction 3 (0x0c): NOP (0x00000013)
+13
+00
+00
+00
+// Instruction 4 (0x10): jal x2, +16 (0x0100016f) -> Call Func2 (0x20), x2 = 0x14
+6f
+01
+00
+01
+// Instruction 5 (0x14): jalr x0, 0(x1) (0x00008067) -> Ret to Main (0x04)
+67
+80
+00
+00
+// Instruction 6 (0x18): NOP (0x00000013)
+13
+00
+00
+00
+// Instruction 7 (0x1c): NOP (0x00000013)
+13
+00
+00
+00
+// Instruction 8 (0x20): addi x5, x0, 55 (0x03700293) -> Func2: x5 = 55
+93
+02
+70
+03
+// Instruction 9 (0x24): jalr x0, 0(x2) (0x00010067) -> Ret to Func1 (0x14)
+67
+00
+01
+00
+// Instruction 10 (0x28): NOP (0x00000013)
+13
+00
+00
+00

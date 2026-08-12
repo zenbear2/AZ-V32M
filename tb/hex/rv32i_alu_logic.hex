@@ -1,0 +1,61 @@
+// RV32I ALU Arithmetic & Logic Test Memory Preload
+// Instruction 0: addi x1, x0, 31 (0x01f00093)
+93
+00
+f0
+01
+// Instruction 1: addi x2, x0, 5 (0x00500113)
+13
+01
+50
+00
+// Instruction 2: sll x3, x1, x2 (0x002091b3) -> x3 = 31 << 5 = 992 (0x3e0)
+b3
+91
+20
+00
+// Instruction 3: srl x4, x3, x2 (0x0021d233) -> x4 = 992 >> 5 = 31 (0x1f)
+33
+d2
+21
+00
+// Instruction 4: addi x5, x0, -10 (0xff600293) -> x5 = -10 (0xffffff6)
+93
+02
+60
+ff
+// Instruction 5: sra x6, x5, x2 (0x4022d333) -> x6 = -10 >> 5 arith = -1 (0xffffffff)
+33
+d3
+22
+40
+// Instruction 6: and x7, x1, x3 (0x0030f3b3) -> x7 = 0x1f & 0x3e0 = 0
+b3
+f3
+30
+00
+// Instruction 7: or x8, x1, x3 (0x0030e433) -> x8 = 0x1f | 0x3e0 = 0x3ff (1023)
+33
+e4
+30
+00
+// Instruction 8: xor x9, x1, x8 (0x0080c4b3) -> x9 = 0x1f ^ 0x3ff = 0x3e0 (992)
+b3
+c4
+80
+00
+// Instruction 9: slt x10, x5, x1 (0x0012a533) -> x10 = (-10 < 31) = 1
+33
+a5
+12
+00
+// Instruction 10: sltu x11, x5, x1 (0x0012b5b3) -> x11 = (unsigned -10 < 31) = 0
+b3
+b5
+12
+00
+// Instruction 11: JAL x0, 0 (0x0000006f) -- Halt loop
+6f
+00
+00
+00
