@@ -31,33 +31,39 @@ module instr_queue #(
   logic [PTR_WIDTH-1:0] rd_ptr;
   logic [PTR_WIDTH:0]   count;
 
-  assign full  = (count == DEPTH);
-  assign empty = (count == 0);
+  assign full  = (count == (PTR_WIDTH+1)'(DEPTH));
+  assign empty = (count == 0) || flush;
   assign dout  = mem[rd_ptr];
 
+  // FIFO Pointer and Status Tracking
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n || flush) begin
+    if (!rst_n) begin
       wr_ptr <= '0;
       rd_ptr <= '0;
       count  <= '0;
-    end begin
+    end else if (flush) begin
+      wr_ptr <= '0;
+      rd_ptr <= '0;
+      count  <= '0;
+    end else begin
+      if (push && !full) begin
+        wr_ptr <= wr_ptr + 1'b1;
+      end
+      if (pop && !empty) begin
+        rd_ptr <= rd_ptr + 1'b1;
+      end
       case ({push && !full, pop && !empty})
-        2'b10: begin // Push only
-          mem[wr_ptr] <= din;
-          wr_ptr      <= wr_ptr + 1'b1;
-          count       <= count + 1'b1;
-        end
-        2'b01: begin // Pop only
-          rd_ptr <= rd_ptr + 1'b1;
-          count  <= count - 1'b1;
-        end
-        2'b11: begin // Simultaneous Push and Pop
-          mem[wr_ptr] <= din;
-          wr_ptr      <= wr_ptr + 1'b1;
-          rd_ptr      <= rd_ptr + 1'b1;
-        end
+        2'b10: count <= count + 1'b1;
+        2'b01: count <= count - 1'b1;
         default: ;
       endcase
+    end
+  end
+
+  // Data storage array write (decoupled from flush to break critical timing paths)
+  always_ff @(posedge clk) begin
+    if (push && !full) begin
+      mem[wr_ptr] <= din;
     end
   end
 

@@ -169,6 +169,12 @@ package riscv_pkg;
     mem_width_e      mem_width;
     logic            reg_write;
     wb_src_e         wb_src;
+
+    // BPU Update Signals (registered for timing optimization)
+    logic            bpu_update_en;
+    logic [XLEN-1:0] bpu_update_pc;
+    logic [XLEN-1:0] bpu_update_target;
+    logic            bpu_actual_taken;
   } ex_mem_reg_t;
 
   // MEM -> WB Pipeline Register

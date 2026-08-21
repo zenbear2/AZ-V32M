@@ -20,7 +20,21 @@ module az_v_core_top (
   output logic [3:0]  dmem_byte_enable,
   output logic        dmem_req,
   output logic        dmem_we,
-  input  logic [31:0] dmem_rdata
+  input  logic [31:0] dmem_rdata,
+
+  // JTAG Debug Core Interface
+  input  logic        debug_halt_req,
+  input  logic        debug_resume_req,
+  output logic        debug_halted,
+
+  input  logic [4:0]  debug_gpr_addr,
+  output logic [31:0] debug_gpr_rdata,
+  input  logic [31:0] debug_gpr_wdata,
+  input  logic        debug_gpr_wen,
+
+  input  logic        debug_pc_wen,
+  input  logic [31:0] debug_pc_wdata,
+  output logic [31:0] debug_pc_rdata
 );
 
   // --------------------------------------------------------------------------
@@ -61,7 +75,22 @@ module az_v_core_top (
   logic        wb_reg_write;
 
   // --------------------------------------------------------------------------
-  // IF Stage (Fetch Unit)
+  // CPU Halt Logic & State
+  // --------------------------------------------------------------------------
+  logic cpu_halted_reg;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      cpu_halted_reg <= 1'b0;
+    end else if (debug_resume_req) begin
+      cpu_halted_reg <= 1'b0;
+    end else if (debug_halt_req) begin
+      cpu_halted_reg <= 1'b1;
+    end
+  end
+  assign debug_halted = cpu_halted_reg;
+
+  // --------------------------------------------------------------------------
+  // IF Stage (Fetch Unit & Instruction Queue)
   // --------------------------------------------------------------------------
   fetch_unit u_fetch_unit (
     .clk               (clk),
@@ -70,21 +99,47 @@ module az_v_core_top (
     .flush_if          (flush_if),
     .redirect_en       (mispredict),
     .redirect_target   (redirect_target),
-    .bpu_update_en     (bpu_update_en),
-    .bpu_update_pc     (bpu_update_pc),
-    .bpu_update_target (bpu_update_target),
-    .bpu_actual_taken  (bpu_actual_taken),
+    .bpu_update_en     (ex_mem_reg.bpu_update_en),
+    .bpu_update_pc     (ex_mem_reg.bpu_update_pc),
+    .bpu_update_target (ex_mem_reg.bpu_update_target),
+    .bpu_actual_taken  (ex_mem_reg.bpu_actual_taken),
     .imem_addr         (imem_addr),
     .imem_rdata        (imem_rdata),
+    .debug_pc_wen      (debug_pc_wen),
+    .debug_pc_wdata    (debug_pc_wdata),
+    .debug_pc_rdata    (debug_pc_rdata),
     .if_id_out         (if_id_out)
   );
 
-  // IF/ID Pipeline Register
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n || flush_if) begin
-      if_id_reg <= '0;
-    end else if (!stall_id) begin
-      if_id_reg <= if_id_out;
+  // Instruction Queue (Fetch Buffer) Instance
+  logic        iq_full;
+  logic        iq_empty;
+  if_id_reg_t  iq_dout;
+  logic        iq_push;
+  logic        iq_pop;
+
+  assign iq_push = !cpu_halted_reg;
+  assign iq_pop  = !iq_empty && !stall_id;
+
+  instr_queue #(
+    .DEPTH(8)
+  ) u_instr_queue (
+    .clk   (clk),
+    .rst_n (rst_n),
+    .flush (flush_if),
+    .push  (iq_push),
+    .din   (if_id_out),
+    .full  (iq_full),
+    .pop   (iq_pop),
+    .dout  (iq_dout),
+    .empty (iq_empty)
+  );
+
+  // IF/ID Pipeline Register Assignment from Instruction Queue (Optimized: only gate valid flag)
+  always_comb begin
+    if_id_reg = iq_dout;
+    if (iq_empty) begin
+      if_id_reg.valid = 1'b0;
     end
   end
 
@@ -92,23 +147,30 @@ module az_v_core_top (
   // ID Stage (Decode Unit)
   // --------------------------------------------------------------------------
   decode_stage u_decode_stage (
-    .clk          (clk),
-    .rst_n        (rst_n),
-    .if_id_in     (if_id_reg),
-    .wb_reg_write (wb_reg_write),
-    .wb_rd        (wb_rd),
-    .wb_wdata     (wb_wdata),
-    .id_ex_out    (id_ex_out),
-    .rf_rdata1    (rf_rdata1),
-    .rf_rdata2    (rf_rdata2)
+    .clk            (clk),
+    .rst_n          (rst_n),
+    .if_id_in       (if_id_reg),
+    .wb_reg_write   (wb_reg_write),
+    .wb_rd          (wb_rd),
+    .wb_wdata       (wb_wdata),
+    .debug_gpr_addr (debug_gpr_addr),
+    .debug_gpr_rdata(debug_gpr_rdata),
+    .debug_gpr_wen  (debug_gpr_wen),
+    .debug_gpr_wdata(debug_gpr_wdata),
+    .id_ex_out      (id_ex_out),
+    .rf_rdata1      (rf_rdata1),
+    .rf_rdata2      (rf_rdata2)
   );
 
-  // ID/EX Pipeline Register
+  // ID/EX Pipeline Register (Optimized: only gate valid flag upon flush_ex)
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n || flush_ex) begin
+    if (!rst_n) begin
       id_ex_reg <= '0;
     end else begin
       id_ex_reg <= id_ex_out;
+      if (flush_ex) begin
+        id_ex_reg.valid <= 1'b0;
+      end
     end
   end
 
@@ -189,6 +251,8 @@ module az_v_core_top (
     .mem_wb_rd        (mem_wb_reg.rd),
     .mem_wb_reg_write (mem_wb_reg.reg_write),
     .mispredict       (mispredict),
+    .debug_halt       (debug_halted),
+    .iq_full          (iq_full),
     .forward_a        (forward_a),
     .forward_b        (forward_b),
     .stall_if         (stall_if),

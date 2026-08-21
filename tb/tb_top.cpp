@@ -9,6 +9,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <cstdlib>
 #include "Vaz_v_tb.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
@@ -37,6 +38,12 @@ int main(int argc, char** argv) {
         hex_file = std::string(hex_file_arg + 5);
     }
 
+    const char* max_cycles_arg = Verilated::commandArgsPlusMatch("MAX_CYCLES=");
+    int max_cycles = 150;
+    if (max_cycles_arg && max_cycles_arg[0] != '\0') {
+        max_cycles = std::atoi(max_cycles_arg + 12);
+    }
+
     top->trace(tfp.get(), 99);
     tfp->open("sim_wave.vcd");
 
@@ -51,13 +58,15 @@ int main(int argc, char** argv) {
     uint32_t total_flushes = 0;
     uint32_t total_cycles = 0;
 
+    bool caught_exit = false;
+    uint32_t exit_code_val = 0;
+
     std::cout << "\n==========================================" << std::endl;
     std::cout << " Running Suite: " << test_name << std::endl;
     std::cout << " Hex Image:    " << hex_file << std::endl;
     std::cout << "==========================================" << std::endl;
 
     // Simulation loop
-    int max_cycles = 150;
     for (int cycle = 0; cycle < max_cycles; cycle++) {
         total_cycles = cycle;
         if (cycle < 5) {
@@ -91,7 +100,11 @@ int main(int argc, char** argv) {
         tfp->dump(main_time);
         main_time += 5;
 
-
+        if (top->rst_n && top->sim_exit) {
+            caught_exit = true;
+            exit_code_val = top->exit_code;
+            break;
+        }
     }
 
     tfp->close();
@@ -122,6 +135,7 @@ int main(int argc, char** argv) {
     std::cout << "\n------------------------------------------" << std::endl;
     std::cout << "  Front-End BPU & Performance Statistics " << std::endl;
     std::cout << "------------------------------------------" << std::endl;
+    std::cout << "Total Execution Cycles : " << total_cycles << std::endl;
     std::cout << "Total Resolved Branches: " << total_branches << std::endl;
     std::cout << "Branch Hits (Correct)  : " << branch_hits << std::endl;
     std::cout << "Branch Mispredictions  : " << branch_mispredicts << std::endl;
@@ -131,7 +145,12 @@ int main(int argc, char** argv) {
 
     // Check Self-Checking Verification
     bool pass = true;
-    if (golden_suite.count(test_name)) {
+    if (caught_exit) {
+        if (exit_code_val != 0) {
+            std::cout << "[ERROR] Program exited with non-zero status: " << exit_code_val << std::endl;
+            pass = false;
+        }
+    } else if (golden_suite.count(test_name)) {
         for (auto const& [reg_idx, expected_val] : golden_suite[test_name].regs) {
             uint32_t actual_val = top->az_v_tb__DOT__u_core__DOT__u_decode_stage__DOT__u_regfile__DOT__regs[reg_idx - 1];
             if (actual_val != expected_val) {

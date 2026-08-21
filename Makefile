@@ -24,14 +24,15 @@ TB_SRCS    = tb/ram_model.sv tb/az_v_tb.sv
 CPP_TB     = tb/tb_top.cpp
 
 VERILATOR  = verilator
-VFLAGS     = -Wall -Wno-IMPORTSTAR -Wno-UNUSED --trace --cc -Irtl/pkg -Irtl/frontend -Irtl/core -Irtl/pipeline -Irtl/top
+VFLAGS     = -Wall -Wno-IMPORTSTAR -Wno-UNUSED -Wno-PINMISSING -Wno-PINCONNECTEMPTY --trace --cc -Irtl/pkg -Irtl/frontend -Irtl/core -Irtl/pipeline -Irtl/top
 
 HEX        ?= tb/hex/basic_test.hex
 TEST_NAME  ?= basic_test
+MAX_CYCLES ?= 150
 
-.PHONY: all lint build run test_all clean
+.PHONY: all lint build build_sw run run_c test_all test_c_all clean
 
-all: build test_all
+all: build build_sw test_all test_c_all
 
 lint:
 	@echo "[Running Verilator Lint]"
@@ -41,9 +42,29 @@ build:
 	@echo "[Building Verilator Simulation C++ Executable]"
 	$(VERILATOR) $(VFLAGS) --exe --build -j 4 $(RTL_SRCS) $(TB_SRCS) $(CPP_TB) --top-module az_v_tb -o Vaz_v_tb
 
+build_sw:
+	@echo "[Building Bare-Metal C Software Programs with RISC-V GCC]"
+	@$(MAKE) -C sw all
+
 run:
 	@echo "[Running AZ_V Simulation: $(TEST_NAME)]"
-	./obj_dir/Vaz_v_tb +HEX=$(HEX) +TEST_NAME=$(TEST_NAME)
+	./obj_dir/Vaz_v_tb +HEX=$(HEX) +TEST_NAME=$(TEST_NAME) +MAX_CYCLES=$(MAX_CYCLES)
+
+run_c: build build_sw
+	@echo "[Running AZ_V C Program: $(TEST_NAME)]"
+	./obj_dir/Vaz_v_tb +HEX=sw/build/$(TEST_NAME).hex +TEST_NAME=$(TEST_NAME) +MAX_CYCLES=100000
+
+test_c_all: build build_sw
+	@echo "=========================================================================="
+	@echo "            AZ_V RISC-V Bare-Metal C Program Test Suite                  "
+	@echo "=========================================================================="
+	@./obj_dir/Vaz_v_tb +HEX=sw/build/hello.hex +TEST_NAME=hello_c +MAX_CYCLES=100000
+	@./obj_dir/Vaz_v_tb +HEX=sw/build/fibonacci.hex +TEST_NAME=fibonacci_c +MAX_CYCLES=100000
+	@./obj_dir/Vaz_v_tb +HEX=sw/build/bubble_sort.hex +TEST_NAME=bubble_sort_c +MAX_CYCLES=100000
+	@./obj_dir/Vaz_v_tb +HEX=sw/build/matrix_mul.hex +TEST_NAME=matrix_mul_c +MAX_CYCLES=100000
+	@echo "=========================================================================="
+	@echo "         ALL BARE-METAL C PROGRAM TESTS COMPLETED SUCCESSFULLY!          "
+	@echo "=========================================================================="
 
 test_all: build
 	@echo "=========================================================================="
@@ -62,3 +83,4 @@ test_all: build
 clean:
 	@echo "[Cleaning Built Artifacts]"
 	rm -rf obj_dir sim_wave.vcd
+	@$(MAKE) -C sw clean

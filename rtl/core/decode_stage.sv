@@ -18,6 +18,12 @@ module decode_stage (
   input  logic [4:0]  wb_rd,
   input  logic [31:0] wb_wdata,
 
+  // Debug Regfile Interface
+  input  logic [4:0]  debug_gpr_addr,
+  output logic [31:0] debug_gpr_rdata,
+  input  logic        debug_gpr_wen,
+  input  logic [31:0] debug_gpr_wdata,
+
   // Output to EX stage
   output id_ex_reg_t  id_ex_out,
   output logic [31:0] rf_rdata1,
@@ -41,15 +47,20 @@ module decode_stage (
 
   // Register File Instance
   regfile u_regfile (
-    .clk    (clk),
-    .rst_n  (rst_n),
-    .raddr1 (rs1),
-    .rdata1 (rf_rdata1),
-    .raddr2 (rs2),
-    .rdata2 (rf_rdata2),
-    .wen    (wb_reg_write),
-    .waddr  (wb_rd),
-    .wdata  (wb_wdata)
+    .clk         (clk),
+    .rst_n       (rst_n),
+    .raddr1      (rs1),
+    .rdata1      (rf_rdata1),
+    .raddr2      (rs2),
+    .rdata2      (rf_rdata2),
+    .wen         (wb_reg_write),
+    .waddr       (wb_rd),
+    .wdata       (wb_wdata),
+    .debug_raddr (debug_gpr_addr),
+    .debug_rdata (debug_gpr_rdata),
+    .debug_wen   (debug_gpr_wen),
+    .debug_waddr (debug_gpr_addr),
+    .debug_wdata (debug_gpr_wdata)
   );
 
   // Immediate Decoding

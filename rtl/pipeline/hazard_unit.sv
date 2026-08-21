@@ -30,6 +30,12 @@ module hazard_unit (
   // Branch Control
   input  logic        mispredict,
 
+  // Debug Control
+  input  logic        debug_halt,
+
+  // Instruction Queue Status
+  input  logic        iq_full,
+
   // Forwarding Mux Select Outputs
   output logic [1:0]  forward_a,
   output logic [1:0]  forward_b,
@@ -70,8 +76,8 @@ module hazard_unit (
 
   // Pipeline Controls
   always_comb begin
-    stall_if = load_use_hazard;
-    stall_id = load_use_hazard;
+    stall_if = load_use_hazard || debug_halt || iq_full;
+    stall_id = load_use_hazard || debug_halt;
 
     flush_if = mispredict;
     flush_id = mispredict;
