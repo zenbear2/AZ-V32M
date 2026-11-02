@@ -2,19 +2,6 @@
 
 [English](README.md) | [繁體中文](README_zh.md)
 
-![RISC-V](https://img.shields.io/badge/Architecture-RISC--V%20RV32I-blue.svg)
-![Pipeline](https://img.shields.io/badge/Pipeline-5--Stage%20In--Order-brightgreen.svg)
-![BPU](https://img.shields.io/badge/Front--End-BTB%20%7C%20BHT%20%7C%20RAS%20%7C%20IQ-orange.svg)
-![Debug](https://img.shields.io/badge/Debug-Hardware%20JTAG%20Ready-yellow.svg)
-![Verilator](https://img.shields.io/badge/Simulator-Verilator%20C%2B%2B%20Driver-purple.svg)
-![Language](https://img.shields.io/badge/HDL-SystemVerilog-red.svg)
-
-**AZ-V32M** (also referenced as **AZ_V**) is a high-performance, synthesizable 32-bit RISC-V processor core written in SystemVerilog. The core fully implements the unprivileged **RV32I Base Integer Instruction Set**, features a classic **5-stage in-order pipeline**, and integrates an advanced **speculative branch prediction unit (BPU)** coupled with a dedicated **Instruction Queue (IQ)**. It is tailored for high-speed ASIC tape-outs and FPGA SoC implementations.
-
-This core has been verified and deployed in:
-* **ASIC Implementation**: LibreLane hierarchical hard macro flow using GF180MCU process technology (see [`AZ_V_SoC`](../AZ_V_SoC)).
-* **FPGA Systems**: Synthesized and closed timing at 100 MHz on AMD / Xilinx Kintex UltraScale+ (see [`KU5P-AZ-V32`](../KU5P-AZ-V32)).
-
 ---
 
 ## Key Features
