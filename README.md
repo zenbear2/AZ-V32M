@@ -2,6 +2,8 @@
 
 [English](README.md) | [繁體中文](README_zh.md)
 
+**AZ-V32M** (also known as **AZ_V**) is a customizable 32-bit RISC-V processor core implemented in SystemVerilog. The core fully implements the **RV32I Base Integer Instruction Set**, features a classic **5-Stage pipeline architecture**, and integrates an advanced **front-end speculative Branch Prediction Unit (BPU)** along with an **Instruction Queue (IQ)**.
+
 ---
 
 ## Key Features

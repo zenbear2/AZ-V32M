@@ -2,7 +2,7 @@
 
 [English](README.md) | [繁體中文](README_zh.md)
 
-**AZ-V32M**（亦稱 **AZ_V**）是一款採用 SystemVerilog 撰寫的高效能、可客製化 32 位元 RISC-V 處理器核心。核心完全實現 **RV32I 基本整數指令集**，具備經典 **5-Stage 管線架構**，並整合進階**前端投機分支預測單元 (BPU)** 與 **指令佇列 (Instruction Queue)**。
+**AZ-V32M**（亦稱 **AZ_V**）是一款採用 SystemVerilog 撰寫的可客製化 32 位元 RISC-V 處理器核心。核心完全實現 **RV32I 基本整數指令集**，具備經典 **5-Stage 管線架構**，並整合進階**前端投機分支預測單元 (BPU)** 與 **指令佇列 (Instruction Queue)**。
 
 ---
 
